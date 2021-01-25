@@ -1,0 +1,5 @@
+subjectCode,number,title,creditType,creditsMin,creditsMax
+ACCT,101,Accounting 101,fixed,3,
+MATH,101,Math 101,fixed,3
+BIO,423,Biology Research,range,3,5
+CHEM,221,Organic Chemistry,multiple,3,4
