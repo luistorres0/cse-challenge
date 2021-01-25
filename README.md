@@ -41,3 +41,5 @@ The script should address the following scenarios:
   "type": "multi"
 }
 ```
+
+You are welcome to use libraries like lodash, axios, fast-csv, fs-extra, or others.
