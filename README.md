@@ -101,3 +101,4 @@ You are welcome to use libraries like lodash, axios, fast-csv, fs-extra, or othe
 ### Submission
 - Create a github repo and send along the link
 - Commit your work as you work documenting each commit
+- Make sure not to commit the API key you've been given!
