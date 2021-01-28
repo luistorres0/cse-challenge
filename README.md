@@ -1,4 +1,9 @@
-## Assignment
+### Submission
+- Create a github repo and send along the link
+- Commit your work as you work documenting each commit
+- Make sure not to commit the API key you've been given!
+
+### Assignment
 
 You've been given a sample CSV of course data to load. Using the data in `data/courses.csv`, create a script that:
 
@@ -97,8 +102,3 @@ Please see the [Kuali Developer Documentation](https://developers.kuali.co) for 
 - `notes` **should have your name** as well as any notes you might like to put on the records you're submitting.
 
 You are welcome to use libraries like lodash, axios, fast-csv, fs-extra, or others.
-
-### Submission
-- Create a github repo and send along the link
-- Commit your work as you work documenting each commit
-- Make sure not to commit the API key you've been given!
