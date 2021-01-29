@@ -40,7 +40,8 @@ Please see the [Kuali Developer Documentation](https://developers.kuali.co) for 
 
 ### Data Point Requirements
 - `subjectCode` will need to use the corresponding `id` of the relevant `subjectcode option`. This data can be retrieved using the `options` API endpoints: https://developers.kuali.co/#cm-options-option-types
-  - use the `id` of the `subjectcodes` option with the name that matches the value in the CSV.
+  - use the `id` of the `subjectcodes` option with the name that matches the value in the CSV
+  - do not populate this field if no corresponding option is found
 - use the raw value in the `number` and `title` fields of the CSV
 - the `credits` field should be formatted using he following conditions:
   - if the `creditType` is `fixed` the credit data should be as follows, using the `creditsMin` value for `min`, `max`, and `value`:
@@ -89,8 +90,9 @@ Please see the [Kuali Developer Documentation](https://developers.kuali.co) for 
   - Summer = YYYY-07-04
   - Fall = YYYY-10-04
 - `groupFilter1` will need to use the corresponding `id` of the relevant `group`. This data can be retrieved using the `groups` API endpoint: https://developers.kuali.co/#groups-groups-get
-  - use the `id` of the group with the name that matches the value in the CSV.
-  - use the `parentId` of this group for the `groupFilter2` field.
+  - use the `id` of the group with the name that matches the value in the CSV
+  - use the `parentId` of this group for the `groupFilter2` field
+  - do not populate this field if no corresponding group is found
 - `campus` will need to use the corresponding `id` of the relevant `campuses option`. This data can be retrieved using the `options` API endpoints: https://developers.kuali.co/#cm-options-option-types
   - use the `id` of the `campus` option(s) with the name that matches the value in the CSV to create this fields data as follows:
   ```json
@@ -99,6 +101,7 @@ Please see the [Kuali Developer Documentation](https://developers.kuali.co) for 
     "6012ddfbe43ec1002784e1c5": true
   }
   ```
+  - omit any campus options not found in the options API endpoint
 - `notes` **should have your name** as well as any notes you might like to put on the records you're submitting.
 
-You are welcome to use libraries like lodash, axios, fast-csv, fs-extra, or others.
+You are welcome to use third party libraries.
