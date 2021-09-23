@@ -1,119 +1,11 @@
-require("dotenv").config();
-const { API_KEY } = process.env || "";
-const fs = require("fs").promises;
-const axios = require("axios");
-
-async function getSubjectCodeOptions() {
-  const response = await axios({
-    method: "get",
-    url: "https://stucse.kuali.co/api/cm/options/types/subjectcodes",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-    },
-  });
-
-  const subjectCodes = response.data.reduce((obj, code) => {
-    return {
-      ...obj,
-      [code.name]: { ...code },
-    };
-  }, {});
-
-  return subjectCodes;
-}
-
-async function readCSV(path) {
-  const data = await fs.readFile(path, "utf8");
-  return data;
-}
-
-function parseCsvDataToObjects(csvString) {
-  const rows = csvString.split("\r\n");
-
-  const headers = rows[0].split(",");
-
-  const records = [];
-
-  for (let i = 1; i < rows.length; i++) {
-    let flag = 0;
-    let str = "";
-    for (let ch of rows[i]) {
-      if (ch === '"' && flag === 0) {
-        flag = 1;
-      } else if (ch === '"' && flag === 1) {
-        flag = 0;
-      }
-      if (ch === "," && flag === 0) {
-        ch = "|";
-      }
-      if (ch !== '"') {
-        str += ch;
-      }
-    }
-
-    const values = str.split("|");
-
-    const record = {};
-    for (let index in headers) {
-      record[headers[index]] = values[index];
-    }
-
-    records.push(record);
-  }
-
-  return records;
-}
-
-async function getGroupOptions() {
-  const response = await axios({
-    method: "get",
-    url: "https://stucse.kuali.co/api/v1/groups/",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-    },
-  });
-
-  const groups = response.data.reduce((obj, group) => {
-    return {
-      ...obj,
-      [group.name]: { ...group },
-    };
-  }, {});
-
-  return groups;
-}
-
-async function getCampusOptions() {
-  const response = await axios({
-    method: "get",
-    url: "https://stucse.kuali.co/api/cm/options/types/campuses",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-    },
-  });
-
-  const campuses = response.data.reduce((obj, campus) => {
-    return {
-      ...obj,
-      [campus.name]: { ...campus },
-    };
-  }, {});
-
-  return campuses;
-}
-
-async function createCourseRecord(newRecord) {
-  const response = await axios({
-    method: "post",
-    url: "https://stucse.kuali.co/api/cm/courses/",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-    },
-    data: newRecord,
-  });
-
-  console.log(response.data);
-}
+const {
+  readCSV,
+  parseCsvDataToObjects,
+  createCourseRecord,
+  getGroupOptions,
+  getCampusOptions,
+  getSubjectCodeOptions,
+} = require("./utils/utils");
 
 async function createRecordsFromCSV(filePathToCSV) {
   const csv = await readCSV(filePathToCSV);
@@ -215,9 +107,9 @@ async function createRecordsFromCSV(filePathToCSV) {
     newJSON["notes"] = "Submitted by Luis Torres";
 
     // Post the new entry to the API
-    createCourseRecord(newJSON);
+    // createCourseRecord(newJSON);
 
-    // console.log(newJSON);
+    console.log(newJSON);
   });
 }
 
