@@ -102,6 +102,19 @@ async function getCampusOptions() {
   return campuses;
 }
 
+async function createCourseRecord(newRecord) {
+  const response = await axios({
+    method: "post",
+    url: "https://stucse.kuali.co/api/cm/courses/",
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+    },
+    data: newRecord,
+  });
+
+  console.log(response.data);
+}
+
 async function createRecordsFromCSV(filePathToCSV) {
   const csv = await readCSV(filePathToCSV);
 
@@ -201,7 +214,10 @@ async function createRecordsFromCSV(filePathToCSV) {
     // Set the notes prop
     newJSON["notes"] = "Submitted by Luis Torres";
 
-    console.log(newJSON);
+    // Post the new entry to the API
+    createCourseRecord(newJSON);
+
+    // console.log(newJSON);
   });
 }
 
