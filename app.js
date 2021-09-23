@@ -7,17 +7,24 @@ const {
   getSubjectCodeOptions,
 } = require("./utils/utils");
 
+// Creates new records from the input CSV file.
 async function createRecordsFromCSV(filePathToCSV) {
+  // Read the CSV file
   const csv = await readCSV(filePathToCSV);
 
+  // Create the table records from the CSV string
   const recordsFromCSV = parseCsvDataToObjects(csv);
 
+  // Get the subjectCode options
   const subjectCodeOptions = await getSubjectCodeOptions();
 
+  // Get the group options
   const groupOptions = await getGroupOptions();
 
+  // Get the campus options
   const campusOptions = await getCampusOptions();
 
+  // Create a dictionary to map the 'dateStart' prop in each record to a date string
   const dateStartMappings = {
     Winter: "YYYY-01-01",
     Spring: "YYYY-04-03",
@@ -25,6 +32,7 @@ async function createRecordsFromCSV(filePathToCSV) {
     Fall: "YYYY-10-04",
   };
 
+  // Next we loop through the records. For each record we create a new object and set its properties.
   recordsFromCSV.forEach((record) => {
     const newJSON = {};
 
@@ -107,10 +115,9 @@ async function createRecordsFromCSV(filePathToCSV) {
     newJSON["notes"] = "Submitted by Luis Torres";
 
     // Post the new entry to the API
-    // createCourseRecord(newJSON);
-
-    console.log(newJSON);
+    createCourseRecord(newJSON);
   });
 }
 
+// Call our function and create the records
 createRecordsFromCSV(__dirname + "/data/courses.csv");
