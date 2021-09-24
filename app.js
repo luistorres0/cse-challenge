@@ -1,20 +1,102 @@
 const {
-  readCSV,
-  parseCsvDataToObjects,
   createCourseRecord,
   getGroupOptions,
   getCampusOptions,
   getSubjectCodeOptions,
 } = require("./utils/utils");
 
+const fs = require("fs");
+const csv = require("@fast-csv/parse");
+
+// Takes one row from the CSV data and uses it as well as the subjectCode, campus, and group options (also the dateStart map) to format an object correctly
+// for posting to the API. After formatting, the new object is posted to the API.
+function processRow(row, subjectCodeOptions, groupOptions, campusOptions, dateStartMappings) {
+  const newJSON = {};
+
+  // Set the subjectCode prop
+  const { subjectCode } = row;
+  if (subjectCode in subjectCodeOptions) {
+    newJSON["subjectCode"] = subjectCodeOptions[subjectCode].id;
+  } else {
+    newJSON["subjectCode"] = "";
+  }
+
+  // Set the number and title props
+  newJSON["number"] = row.number;
+  newJSON["title"] = row.title;
+
+  // Set the credits field
+  const { creditType, creditsMin, creditsMax } = row;
+  switch (creditType) {
+    case "fixed":
+      newJSON["credits"] = {
+        chosen: "fixed",
+        credits: {
+          min: creditsMin,
+          max: creditsMin,
+        },
+        value: creditsMin,
+      };
+      break;
+    case "multiple":
+      newJSON["credits"] = {
+        chosen: "multiple",
+        credits: {
+          min: creditsMin,
+          max: creditsMax,
+        },
+        value: [creditsMin, creditsMax],
+      };
+      break;
+    case "range":
+      newJSON["credits"] = {
+        chosen: "range",
+        credits: {
+          min: creditsMin,
+          max: creditsMax,
+        },
+        value: { min: creditsMin, max: creditsMax },
+      };
+      break;
+  }
+
+  // Set the status prop
+  newJSON["status"] = "draft";
+
+  // Set the dateStart prop
+  const [term, year] = row.dateStart.split(" ");
+  newJSON["dateStart"] = dateStartMappings[term].replace("YYYY", year);
+
+  // Set the groupFilter1 and groupFilter2 props
+  const { department: groupName } = row;
+  if (groupName in groupOptions) {
+    newJSON["groupFilter1"] = groupOptions[groupName].id;
+    newJSON["groupFilter2"] = groupOptions[groupName].parentId;
+  } else {
+    newJSON["groupFilter1"] = "";
+    newJSON["groupFilter2"] = "";
+  }
+
+  // Set the campuses prop
+  const campuses = row.campus.split(",");
+  const newObj = {};
+  campuses.forEach((campus) => {
+    if (campus in campusOptions) {
+      newObj[campusOptions[campus].id] = true;
+    }
+  });
+
+  newJSON["campus"] = newObj;
+
+  // Set the notes prop
+  newJSON["notes"] = "Submitted by Luis Torres";
+
+  // Post the new entry to the API
+  createCourseRecord(newJSON);
+}
+
 // Creates new records from the input CSV file.
 async function createRecordsFromCSV(filePathToCSV) {
-  // Read the CSV file
-  const csv = await readCSV(filePathToCSV);
-
-  // Create the table records from the CSV string
-  const recordsFromCSV = parseCsvDataToObjects(csv);
-
   // Get the subjectCode options
   const subjectCodeOptions = await getSubjectCodeOptions();
 
@@ -32,91 +114,13 @@ async function createRecordsFromCSV(filePathToCSV) {
     Fall: "YYYY-10-04",
   };
 
-  // Next we loop through the records. For each record we create a new object and set its properties.
-  recordsFromCSV.forEach((record) => {
-    const newJSON = {};
-
-    // Set the subjectCode prop
-    const { subjectCode } = record;
-    if (subjectCode in subjectCodeOptions) {
-      newJSON["subjectCode"] = subjectCodeOptions[subjectCode].id;
-    } else {
-      newJSON["subjectCode"] = "";
-    }
-
-    // Set the number and title props
-    newJSON["number"] = record.number;
-    newJSON["title"] = record.title;
-
-    // Set the credits field
-    const { creditType, creditsMin, creditsMax } = record;
-    switch (creditType) {
-      case "fixed":
-        newJSON["credits"] = {
-          chosen: "fixed",
-          credits: {
-            min: creditsMin,
-            max: creditsMin,
-          },
-          value: creditsMin,
-        };
-        break;
-      case "multiple":
-        newJSON["credits"] = {
-          chosen: "multiple",
-          credits: {
-            min: creditsMin,
-            max: creditsMax,
-          },
-          value: [creditsMin, creditsMax],
-        };
-        break;
-      case "range":
-        newJSON["credits"] = {
-          chosen: "range",
-          credits: {
-            min: creditsMin,
-            max: creditsMax,
-          },
-          value: { min: creditsMin, max: creditsMax },
-        };
-        break;
-    }
-
-    // Set the status prop
-    newJSON["status"] = "draft";
-
-    // Set the dateStart prop
-    const [term, year] = record.dateStart.split(" ");
-    newJSON["dateStart"] = dateStartMappings[term].replace("YYYY", year);
-
-    // Set the groupFilter1 and groupFilter2 props
-    const { department: groupName } = record;
-    if (groupName in groupOptions) {
-      newJSON["groupFilter1"] = groupOptions[groupName].id;
-      newJSON["groupFilter2"] = groupOptions[groupName].parentId;
-    } else {
-      newJSON["groupFilter1"] = "";
-      newJSON["groupFilter2"] = "";
-    }
-
-    // Set the campuses prop
-    const campuses = record.campus.split(",");
-    const newObj = {};
-    campuses.forEach((campus) => {
-      if (campus in campusOptions) {
-        newObj[campusOptions[campus].id] = true;
-      }
-    });
-
-    newJSON["campus"] = newObj;
-
-    // Set the notes prop
-    newJSON["notes"] = "Submitted by Luis Torres";
-
-    // Post the new entry to the API
-    createCourseRecord(newJSON);
-  });
+  fs.createReadStream(filePathToCSV, "utf8")
+    .pipe(csv.parse({ headers: true }))
+    .on("error", (error) => console.log(error))
+    .on("data", (row) =>
+      processRow(row, subjectCodeOptions, groupOptions, campusOptions, dateStartMappings)
+    )
+    .on("end", (rowCount) => console.log(`Parsed ${rowCount} rows`));
 }
 
 // Call our function and create the records
